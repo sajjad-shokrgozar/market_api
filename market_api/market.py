@@ -8,6 +8,8 @@ import requests
 import math
 import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar
+import warnings
+warnings.filterwarnings('ignore')
 
 class Market:
     def __init__(self, risk_free_rate=0.3):
