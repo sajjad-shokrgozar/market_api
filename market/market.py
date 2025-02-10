@@ -436,5 +436,5 @@ class Market:
         return all_data
 
 
-print(Market.get_market_cap(['فملی', 'فولاد']))
+# print(Market.get_firms_info(['فملی', 'فولاد']))
 
