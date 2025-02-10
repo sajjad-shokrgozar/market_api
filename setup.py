@@ -1,22 +1,23 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="market_api",
-    version="0.1.4",
+    name="market",
+    version="0.2.0",
     author="sajjad_shokrgozar",
     author_email="shokrgozarsajjad@gmail.com",
     description="A Python package for market analysis and option pricing",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/sajjad-shokrgozar/market_api",
+    url="https://github.com/sajjad-shokrgozar/market",
     packages=find_packages(),
+    package_data={'market': ['firms_info.csv']},
     install_requires=[
         "pandas",
         "numpy",
         "scipy",
         "requests",
-        "matplotlib",
-        "jdatetime"
+        "jdatetime",
+        "helpers",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
