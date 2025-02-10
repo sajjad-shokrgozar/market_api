@@ -5,7 +5,7 @@ setup(
     version="0.2.0",
     author="sajjad_shokrgozar",
     author_email="shokrgozarsajjad@gmail.com",
-    description="A Python package for market analysis and option pricing",
+    description="A Python package for market analysis and pricing",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/sajjad-shokrgozar/market",
