@@ -281,12 +281,12 @@ class Market:
             
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'market', 'type', 'strike', 'ttm',
+            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1',
             'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'market', 'type', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma'
         ]
@@ -319,16 +319,16 @@ class Market:
         temp_df['lva'] = temp_df['lva'].apply(lambda x: Helpers.characters_modifier(x))
 
         # Create dummy columns to align with the option structure
-        temp_df[['type', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma']] = None
+        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma']] = None
         temp_df['market'] = 'stock'
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'market', 'type', 'strike',
+            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike',
             'ttm', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
             'qmo1', 'ua_last_price', 'ua_close_price'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'market', 'type', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'ua_last', 'ua_close'
         ]
