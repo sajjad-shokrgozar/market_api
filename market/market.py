@@ -45,13 +45,6 @@ class Market:
             return True
 
     @staticmethod
-    def cal_ttm(maturity_date):
-        """Calculate time to maturity (in days) from today's date."""
-        today = datetime.date.today()
-        maturity_date = datetime.date.fromisoformat(str(maturity_date).replace(' 00:00:00', ''))
-        return int((maturity_date - today).days)
-
-    @staticmethod
     def extract_values(row):
         """Extract pmd, qmd, pmo, qmo from the best-limit dictionary."""
         first_order = row[0]
