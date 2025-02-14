@@ -185,7 +185,7 @@ class Market:
             return None
 
     @classmethod
-    def get_option_market_watch(cls, risk_free_rate=0.3):
+    def get_option_market_watch(cls, Greeks=False, risk_free_rate=0.3):
         """
         Get option market data from TSE, compute implied volatility, delta, gamma, etc.
         Pass `risk_free_rate` to override default (0.3).
@@ -248,32 +248,38 @@ class Market:
 
         temp_df['strike'] = temp_df['strike'].astype(float)
 
-        # Calculate Implied Vol, Delta, Gamma
-        temp_df['IV'] = temp_df.apply(
-            lambda row: cls.implied_volatility(
-                row['ua_last_price'], row['strike'], row['pdv'],
-                row['ttm'], risk_free_rate, row['type']
-            ),
-            axis=1
-        )
-
-        temp_df['delta'] = temp_df.apply(
-            lambda row: cls.delta(
-                row['ua_last_price'], row['strike'], row['ttm'],
-                risk_free_rate, row['IV'], row['type']
-            ),
-            axis=1
-        )
-
-        temp_df['gamma'] = temp_df.apply(
-            lambda row: cls.gamma(
-                row['ua_last_price'], row['strike'], row['ttm'],
-                risk_free_rate, row['IV']
-            ),
-            axis=1
-        )
-
         temp_df['market'] = 'option'
+
+        temp_df[['IV', 'delta', 'gamma']] = None, None, None
+
+        if Greeks:
+
+            # Calculate Implied Vol, Delta, Gamma
+            temp_df['IV'] = temp_df.apply(
+                lambda row: cls.implied_volatility(
+                    row['ua_last_price'], row['strike'], row['pdv'],
+                    row['ttm'], risk_free_rate, row['type']
+                ),
+                axis=1
+            )
+
+            temp_df['delta'] = temp_df.apply(
+                lambda row: cls.delta(
+                    row['ua_last_price'], row['strike'], row['ttm'],
+                    risk_free_rate, row['IV'], row['type']
+                ),
+                axis=1
+            )
+
+            temp_df['gamma'] = temp_df.apply(
+                lambda row: cls.gamma(
+                    row['ua_last_price'], row['strike'], row['ttm'],
+                    risk_free_rate, row['IV']
+                ),
+                axis=1
+            )
+            
+
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'market', 'type', 'strike', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1',
@@ -329,12 +335,12 @@ class Market:
         return temp_df
 
     @classmethod
-    def get_market_watch(cls, risk_free_rate=0.3):
+    def get_market_watch(cls, Greeks=False, risk_free_rate=0.3):
         """
         Combine option and stock market data.
         Pass `risk_free_rate` to apply in option pricing calculations.
         """
-        tse_options = cls.get_option_market_watch(risk_free_rate=risk_free_rate)
+        tse_options = cls.get_option_market_watch(Greeks=Greeks, risk_free_rate=risk_free_rate)
         tse_stock = cls.get_stock_market_watch()
         return pd.concat([tse_options, tse_stock])
 
@@ -437,4 +443,8 @@ class Market:
 
 
 # print(Market.get_firms_info(['فملی', 'فولاد']))
+# print(Market.get_option_market_watch(Greeks=True))
+# print(Market.get_market_watch(Greeks=True))
+# print(Market.get_stock_market_watch())
+
 
