@@ -10,11 +10,14 @@ import datetime
 import jdatetime
 import numpy as np
 import pandas as pd
+import warnings
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scipy.stats import norm
 
 from helpers import Helpers
+
+warnings.filterwarnings('ignore')
 
 
 class Market:
