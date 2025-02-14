@@ -232,7 +232,7 @@ class Market:
 
         # Convert maturity to Gregorian, then compute TTM
         temp_df['g_maturity'] = temp_df['maturity'].apply(lambda x: Helpers.to_gregorian_date(x))
-        temp_df['ttm'] = temp_df['g_maturity'].apply(cls.cal_ttm)
+        temp_df['ttm'] = temp_df['g_maturity'].apply(Helpers.cal_ttm)
 
         # Map underlying's last/close price
         temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
