@@ -187,10 +187,7 @@ class Market:
         Pass `risk_free_rate` to override default (0.3).
         """
         url = (
-            'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch'
-            '?market=0&industrialGroup=&paperTypes%5B0%5D=6&paperTypes%5B1%5D=2'
-            '&paperTypes%5B2%5D=1&paperTypes%5B3%5D=8&showTraded=false'
-            '&withBestLimits=true&hEven=0&RefID=0'
+            'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
         res = requests.get(url, headers=cls.HEADERS)
         market_watch = res.json()['marketwatch']
@@ -238,9 +235,12 @@ class Market:
         temp_df['ttm'] = temp_df['g_maturity'].apply(Helpers.cal_ttm)
 
         # Map underlying's last/close price
-        temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
-        temp_df['ua_close_price'] = temp_df['underlying'].apply(lambda x: cls.get_close_price(x, total_df))
-        temp_df = temp_df[~temp_df['ua_last_price'].isna()]
+        # temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
+        # temp_df['ua_close_price'] = temp_df['underlying'].apply(lambda x: cls.get_close_price(x, total_df))
+        temp_df['ua_last_price'] = None
+        temp_df['ua_close_price'] = None
+
+        # temp_df = temp_df[~temp_df['ua_last_price'].isna()]
 
         temp_df['strike'] = temp_df['strike'].astype(float)
 
@@ -412,7 +412,7 @@ class Market:
         return {
             'symbol': symbol,
             'id': firm_id,
-            'market_cap': zTitad_value
+            'shares': zTitad_value
         }
 
     @classmethod
