@@ -26,14 +26,8 @@ class Market:
     """
 
     # Single class-level headers definition for all HTTP requests:
-    HEADERS = {
-        'Host': 'cdn.tsetmc.com',
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0'
     }
 
     # Regex pattern for filtering out symbols with digits or ending with 'ح'
@@ -189,7 +183,7 @@ class Market:
         url = (
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
-        res = requests.get(url, headers=cls.HEADERS)
+        res = requests.get(url, headers=cls.headers)
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
 
@@ -299,7 +293,7 @@ class Market:
             '&paperTypes%5B2%5D=8&showTraded=false'
             '&withBestLimits=true&hEven=0&RefID=0'
         )
-        res = requests.get(url, headers=cls.HEADERS)
+        res = requests.get(url, headers=cls.headers)
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
 
@@ -400,7 +394,7 @@ class Market:
         try:
             with requests.Session() as session:
                 # Update session with class-level headers
-                session.headers.update(cls.HEADERS)
+                session.headers.update(cls.headers)
                 resp = session.get(url, timeout=10)
                 resp.raise_for_status()
                 instrument_info = resp.json().get('instrumentInfo', {})
