@@ -7,7 +7,6 @@ import math
 import time
 import requests
 import datetime
-import jdatetime
 import numpy as np
 import pandas as pd
 import warnings
@@ -439,16 +438,40 @@ class Market:
 
     @classmethod
     def get_total_options_symbol(cls):
+        """
+        Retrieves the total option symbols available in the market.
+
+        This method fetches option market watch data, extracts unique option tickers,
+        combines them with a predefined list of option tickers, and then queries an API
+        to obtain additional details for each ticker.
+
+        Returns:
+            numpy.ndarray: An array containing trade symbols and corresponding names.
+        """
         market_watch_options = Market.get_option_market_watch()
         option_tickers = list(market_watch_options['symbol'].str.replace(r'[0-9]*', '', regex=True).unique())
-        my_option_tickers = ['ضپادا', 'ضهمن', 'ضخود', 'ضستا', 'ضفلا', 'طملت', 'ضذوب', 'ضشنا', 'طهرم', 'ضرویین', 'طپادا', 'ضجار', 'ضسرو', 'ضتاب', 'ضکرومیت', 'طپتروآبان', 'طنارنج', 'طذوب', 'ضران', 'ضملت', 'ضخپارس', 'ضتیام', 'ضنارنج', 'طتاب', 'طکرمان', 'طسپا', 'طستر', 'ضفزر', 'طران', 'طستا', 'ضفلزفارابی', 'ضبساما', 'ضهرم', 'ضتوان', 'ضکرمان', 'طجهش', 'طشنا', 'طملی', 'ضاساس', 'طثمین', 'طکرومیت', 'طخود', 'طوتعاون', 'ضسپا', 'طجار', 'طرویین', 'ضملی', 'ضوتعاون', 'طموج', 'ضستر', 'طهمن', 'طخپارس', 'طفزر', 'ضموج', 'طاطلس', 'طفلا', 'طتوان', 'طبساما', 'ضسامان', 'ضبید', 'ضخاور', 'ضاطلس', 'ضجهش', 'طسامان', 'هامین شهر', 'ضثمین', 'ضپتروآبان', 'ضکاریس', 'طاساس', 'طخاور', 'طتیام', 'طفلزفارابی', 'طکاریس', 'طسرو', 'ضصاد', 'طصاد']
+
+        # Predefined list of option tickers
+        my_option_tickers = ['ضپادا', 'ضهمن', 'ضخود', 'ضستا', 'ضفلا', 'طملت', 'ضذوب', 'ضشنا', 'طهرم', 
+                             'ضرویین', 'طپادا', 'ضجار', 'ضسرو', 'ضتاب', 'ضکرومیت', 'طپتروآبان', 'طنارنج', 
+                             'طذوب', 'ضران', 'ضملت', 'ضخپارس', 'ضتیام', 'ضنارنج', 'طتاب', 'طکرمان', 
+                             'طسپا', 'طستر', 'ضفزر', 'طران', 'طستا', 'ضفلزفارابی', 'ضبساما', 'ضهرم', 
+                             'ضتوان', 'ضکرمان', 'طجهش', 'طشنا', 'طملی', 'ضاساس', 'طثمین', 'طکرومیت', 
+                             'طخود', 'طوتعاون', 'ضسپا', 'طجار', 'طرویین', 'ضملی', 'ضوتعاون', 'طموج', 
+                             'ضستر', 'طهمن', 'طخپارس', 'طفزر', 'ضموج', 'طاطلس', 'طفلا', 'طتوان', 
+                             'طبساما', 'ضسامان', 'ضبید', 'ضخاور', 'ضاطلس', 'ضجهش', 'طسامان', 'هامین شهر', 
+                             'ضثمین', 'ضپتروآبان', 'ضکاریس', 'طاساس', 'طخاور', 'طتیام', 'طفلزفارابی', 
+                             'طکاریس', 'طسرو', 'ضصاد', 'طصاد']
+        
         option_tickers = list(set(option_tickers + my_option_tickers))
         df = pd.DataFrame()
+
         for option_ticker in option_tickers:
-            url = 'https://rahavard365.com/api/v2/search?keyword=' + str(option_ticker)
+            url = f'https://rahavard365.com/api/v2/search?keyword={option_ticker}'
             res = requests.get(url, headers=cls.headers)
             res_json = res.json()['data']
             df = pd.concat([df, pd.DataFrame(res_json)])
+
         df = df[df.type_id == '16']
         df['trade_symbol'] = df['trade_symbol'].str.strip()
         return df[['trade_symbol', 'name']].values
@@ -456,35 +479,45 @@ class Market:
 
     @staticmethod
     def get_tes_id_by_symbol(symbols: list):
-        driver = Firefox()
+        """
+        Retrieves the TES (Tehran Stock Exchange) ID for given symbols.
 
-        thershold = 5
-        while thershold:
+        This method automates a browser session using Selenium to search for 
+        stock symbols on the Tehran Stock Exchange website and extract their IDs.
+
+        Args:
+            symbols (list): A list of stock symbols.
+
+        Returns:
+            list: A list of lists containing symbol and corresponding TES ID.
+        """
+        driver = Firefox()
+        symbols = [Helpers.inverse_characters_modifier(symbol) for symbol in symbols]
+        threshold = 5
+
+        while threshold:
             try:
                 driver.get('https://www.tsetmc.com/MarketOverall')
                 driver.find_element(By.XPATH, '//*[@id="search"]').click()
                 break
             except:
-                thershold -= 1
+                threshold -= 1
                 time.sleep(1)
 
         pattern = r'href="/instInfo/(\d+)"'
-
         data = []
-        for symbol in symbols:
 
-            thershold = 3
-            while thershold:
+        for symbol in symbols:
+            threshold = 3
+            while threshold:
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').clear()
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol))
-                time.sleep(.7)
-                # driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol)[-1])
-                # time.sleep(.1)
+                time.sleep(0.7)
 
                 try:
-                    # result rows
                     result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div/div[1]/div[2]/div[3]/div[2]/div/div')
                     result_rows = result_box.find_elements(By.CLASS_NAME, 'ag-row')
+
                     if not len(result_rows):
                         break
 
@@ -494,24 +527,13 @@ class Market:
 
                         if Helpers.characters_modifier(result_symbol.strip()) == Helpers.characters_modifier(symbol.strip()):
                             href = result_title.find_element(By.TAG_NAME, 'a').get_attribute('outerHTML')
-                            id = re.search(pattern, href)[1]
-                            data.append([symbol, id])
-                            thershold = 0
+                            tes_id = re.search(pattern, href)[1]
+                            data.append([symbol, tes_id])
+                            threshold = 0
                             break
                 except:
-                    thershold -= 1
-                    time.sleep(.1)
+                    threshold -= 1
+                    time.sleep(0.1)
                     continue
 
         return data
-
-
-
-# print(Market.get_firms_info(['فملی', 'فولاد']))
-# print(Market.get_option_market_watch(Greeks=True))
-# print(Market.get_market_watch(Greeks=True))
-# print(Market.get_stock_market_watch())
-
-# print(Market.get_tes_id_by_symbol(symbols=['فولاد', 'فملی', 'شاراک']))
-
-
