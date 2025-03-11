@@ -200,7 +200,7 @@ class Market:
             'pcl', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'ztd'
         ]]
 
-        total_df = temp_df.copy()
+        # total_df = temp_df.copy()
 
         # Filter only option symbols
         temp_df = temp_df[temp_df['lvc'].str.contains('اختيار')]
@@ -276,13 +276,13 @@ class Market:
 
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ttm',
-            'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1',
+            'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
             'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
-            'ask_Q', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma'
+            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma'
         ]
         return temp_df
 
@@ -319,12 +319,12 @@ class Market:
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike',
             'ttm', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
-            'qmo1', 'ua_last_price', 'ua_close_price'
+            'qmo1', 'ztd', 'pMax', 'pMin', 'ua_last_price', 'ua_close_price'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
-            'ask_Q', 'ua_last', 'ua_close'
+            'ask_Q', 'size', 'max_limit', 'min_limit', 'ua_last', 'ua_close'
         ]
         return temp_df
 
@@ -511,8 +511,11 @@ class Market:
             threshold = 3
             while threshold:
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').clear()
-                driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol))
+                driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[:-1]))
                 time.sleep(0.7)
+                driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[-1]))
+                time.sleep(2)
+
 
                 try:
                     result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div/div[1]/div[2]/div[3]/div[2]/div/div')
