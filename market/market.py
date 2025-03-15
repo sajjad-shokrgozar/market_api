@@ -540,3 +540,89 @@ class Market:
                     continue
 
         return data
+
+
+    @classmethod
+    def market_covered_call_return(cls, underlying_list='all', min_ttm=15, max_ttm=60, min_rcut=-40, max_rcut=-10, min_r=-20):
+        """
+        Calculates the return of covered call options in the market based on given filters.
+
+        Parameters:
+        ----------
+        underlying_list : list or str, optional
+            A list of underlying assets to filter for. Defaults to 'all' (includes all available assets).
+        min_ttm : int, optional
+            The minimum time to maturity (TTM) in days. Defaults to 15.
+        max_ttm : int, optional
+            The maximum time to maturity (TTM) in days. Defaults to 60.
+        min_rcut : float, optional
+            The minimum required cut-off return (r_cut) percentage. Defaults to -40.
+        max_rcut : float, optional
+            The maximum required cut-off return (r_cut) percentage. Defaults to -10.
+        min_r : float, optional
+            The minimum required return percentage. Defaults to -20.
+
+        Returns:
+        -------
+        dict:
+            A dictionary containing:
+            - 'market_r': The weighted average return of the filtered covered call options.
+            - 'details': A DataFrame of filtered covered call options, sorted by return ('r').
+        
+        Notes:
+        ------
+        - The function retrieves stock and option market data, merges them, and filters for covered call opportunities.
+        - The function currently uses a manually defined list of funds that should be populated dynamically.
+        - Various trading fees are considered based on the asset type (stock or fund).
+        - The final return ('r') is calculated using the formula for annualized return based on bid and ask prices.
+        - The weighted average return ('market_r') is computed based on trading volume.
+        """
+        
+        stock_df = cls.get_stock_market_watch()
+        option_df = cls.get_option_market_watch()
+        market_watch = pd.concat([stock_df, option_df])
+
+        # FIXME: Fill this list automatically, not manually
+        funds_list = ['اهرم', 'توان', 'موج', 'جهش', 'نارنج اهرم', 'آساس', 'اطلس', 'بیدار', 'کاریس', 'آگاس', 'شتاب', 'خودران', 'سرو', 'بساما', 'پتروپاداش', 'رویین']
+
+        market_watch = market_watch[['id', 'symbol', 'market', 'underlying', 'strike', 'ttm', 'bid_P', 'bid_Q', 'ask_P', 'ask_Q', 'volume']]
+
+        market_watch_option_df = market_watch[market_watch['market'] == 'option']
+        market_watch_stock_df = market_watch[market_watch['market'] == 'stock']
+        market_watch_option_df.columns = ['op_' + column for column in market_watch_option_df.columns]
+        market_watch_stock_df.columns = ['st_' + column for column in market_watch_stock_df.columns]
+
+        cc_df = pd.merge(market_watch_option_df, market_watch_stock_df, how='left', left_on='op_underlying', right_on='st_symbol')
+        cc_df = cc_df[['op_id', 'op_symbol', 'op_underlying', 'op_strike', 'op_ttm', 'op_volume', 'op_bid_P', 'op_bid_Q', 'st_ask_P', 'st_ask_Q']]
+        cc_df['ua_type'] = 'stock'
+        cc_df.loc[cc_df['op_underlying'].isin(funds_list), 'ua_type'] = 'fund'
+        cc_df.loc[cc_df['ua_type'] == 'stock', 'ua_sell_fee'] = 0.0088
+        cc_df.loc[cc_df['ua_type'] == 'stock', 'ua_buy_fee'] = 0.003712
+        cc_df.loc[cc_df['ua_type'] == 'stock', 'short_settlement_fee'] = 0.0055
+        cc_df.loc[cc_df['ua_type'] == 'stock', 'long_settlement_fee'] = 0.0005
+        cc_df.loc[cc_df['ua_type'] == 'fund', 'ua_sell_fee'] = 0.0011875
+        cc_df.loc[cc_df['ua_type'] == 'fund', 'ua_buy_fee'] = 0.00116
+        cc_df.loc[cc_df['ua_type'] == 'fund', 'short_settlement_fee'] = 0.0005
+        cc_df.loc[cc_df['ua_type'] == 'fund', 'long_settlement_fee'] = 0.0005
+        cc_df['op_fee'] = .00103
+        cc_df['r_cut'] = cc_df['op_strike'] / cc_df['st_ask_P'] - 1
+        cc_df['r'] = ((cc_df['op_strike'] * (1 - cc_df['short_settlement_fee'])) / (cc_df['st_ask_P'] * (1 + cc_df['ua_buy_fee']) - cc_df['op_bid_P'] * (1 - cc_df['op_fee']))) ** (365/cc_df['op_ttm']) - 1
+        cc_df = cc_df[['op_symbol', 'op_underlying', 'op_ttm', 'op_bid_P', 'st_ask_P', 'op_volume', 'r_cut', 'r']]
+        cc_df.columns = ['symbol', 'underlying', 'ttm', 'op_bid_P', 'st_ask_P', 'traded_value', 'r_cut', 'r']
+        cc_df = cc_df.applymap(lambda x: None if isinstance(x, complex) else x)
+        cc_df = cc_df[(~cc_df['r'].isna()) & (~cc_df['r_cut'].isna())]
+        cc_df['r_cut'] = cc_df['r_cut'].apply(lambda x: round(x * 100, 1))
+        cc_df['r'] = cc_df['r'].apply(lambda x: round(x * 100, 1))
+
+        filterd_cc_df = cc_df[(cc_df['ttm'] > min_ttm) & (cc_df['ttm'] < max_ttm) & (cc_df['r_cut'] > min_rcut) & (cc_df['r_cut'] < max_rcut) & (cc_df['r'] > min_r)]
+        if underlying_list != 'all':
+            filterd_cc_df = filterd_cc_df[(filterd_cc_df['underlying'].isin(underlying_list))]
+        filterd_cc_df = filterd_cc_df.sort_values('r', ascending=False)[['symbol', 'underlying', 'ttm', 'traded_value', 'r_cut', 'r']]
+        
+        filterd_cc_df['weighted_r'] = filterd_cc_df['traded_value'] * filterd_cc_df['r']
+        market_r = filterd_cc_df['weighted_r'].sum() / filterd_cc_df['traded_value'].sum()
+
+        return {
+            'market_r': float(market_r),
+            'details': filterd_cc_df
+        }
