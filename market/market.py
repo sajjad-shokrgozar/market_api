@@ -635,3 +635,4 @@ class Market:
             'market_r': round(float(market_r), 1),
             'details': filterd_cc_df
         }
+    
