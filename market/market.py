@@ -230,6 +230,7 @@ class Market:
 
         # Convert maturity to Gregorian, then compute TTM
         temp_df['g_maturity'] = temp_df['maturity'].apply(lambda x: Helpers.to_gregorian_date(x))
+        # temp_df = temp_df[temp_df['g_maturity'] != 0]
         temp_df['ttm'] = temp_df['g_maturity'].apply(Helpers.cal_ttm)
 
         # Map underlying's last/close price
@@ -577,7 +578,7 @@ class Market:
         - The final return ('r') is calculated using the formula for annualized return based on bid and ask prices.
         - The weighted average return ('market_r') is computed based on trading volume.
         """
-        
+
         stock_df = cls.get_stock_market_watch()
         option_df = cls.get_option_market_watch()
         market_watch = pd.concat([stock_df, option_df])
@@ -585,7 +586,7 @@ class Market:
         # FIXME: Fill this list automatically, not manually
         funds_list = ['اهرم', 'توان', 'موج', 'جهش', 'نارنج اهرم', 'آساس', 'اطلس', 'بیدار', 'کاریس', 'آگاس', 'شتاب', 'خودران', 'سرو', 'بساما', 'پتروپاداش', 'رویین']
 
-        market_watch = market_watch[['id', 'symbol', 'market', 'underlying', 'strike', 'ttm', 'bid_P', 'bid_Q', 'ask_P', 'ask_Q', 'volume']]
+        market_watch = market_watch[['id', 'symbol', 'market', 'underlying', 'strike', 'ttm', 'min_limit', 'max_limit', 'bid_P', 'bid_Q', 'ask_P', 'ask_Q', 'volume']]
 
         market_watch_option_df = market_watch[market_watch['market'] == 'option']
         market_watch_stock_df = market_watch[market_watch['market'] == 'stock']
@@ -593,7 +594,7 @@ class Market:
         market_watch_stock_df.columns = ['st_' + column for column in market_watch_stock_df.columns]
 
         cc_df = pd.merge(market_watch_option_df, market_watch_stock_df, how='left', left_on='op_underlying', right_on='st_symbol')
-        cc_df = cc_df[['op_id', 'op_symbol', 'op_underlying', 'op_strike', 'op_ttm', 'op_volume', 'op_bid_P', 'op_bid_Q', 'st_ask_P', 'st_ask_Q']]
+        cc_df = cc_df[['op_id', 'op_symbol', 'op_underlying', 'op_strike', 'op_ttm', 'op_volume', 'op_ask_P', 'op_ask_Q', 'op_bid_P', 'op_bid_Q', 'st_ask_P', 'st_ask_Q', 'st_bid_P', 'st_bid_Q', 'st_min_limit', 'st_max_limit']]
         cc_df['ua_type'] = 'stock'
         cc_df.loc[cc_df['op_underlying'].isin(funds_list), 'ua_type'] = 'fund'
         cc_df.loc[cc_df['ua_type'] == 'stock', 'ua_sell_fee'] = 0.0088
@@ -606,6 +607,14 @@ class Market:
         cc_df.loc[cc_df['ua_type'] == 'fund', 'long_settlement_fee'] = 0.0005
         cc_df['op_fee'] = .00103
         cc_df['r_cut'] = cc_df['op_strike'] / cc_df['st_ask_P'] - 1
+
+        #FIXME: برای صف خرید ها قیمت صف گذاشته بشه. الان قیمت بالاتر یا پایینتر از صف رو میزاره
+        # above problem fixed
+        cc_df.loc[cc_df['st_ask_P'] > cc_df['st_max_limit'], 'st_ask_P'] = cc_df.loc[cc_df['st_ask_P'] > cc_df['st_max_limit'], 'st_max_limit']
+        cc_df.loc[cc_df['st_bid_P'] < cc_df['st_min_limit'], 'st_bid_P'] = cc_df.loc[cc_df['st_bid_P'] < cc_df['st_min_limit'], 'st_min_limit']
+        # end
+
+        cc_df = cc_df[cc_df['op_ttm'] != 0]
         cc_df['r'] = ((cc_df['op_strike'] * (1 - cc_df['short_settlement_fee'])) / (cc_df['st_ask_P'] * (1 + cc_df['ua_buy_fee']) - cc_df['op_bid_P'] * (1 - cc_df['op_fee']))) ** (365/cc_df['op_ttm']) - 1
         cc_df = cc_df[['op_symbol', 'op_underlying', 'op_ttm', 'op_bid_P', 'st_ask_P', 'op_volume', 'r_cut', 'r']]
         cc_df.columns = ['symbol', 'underlying', 'ttm', 'op_bid_P', 'st_ask_P', 'traded_value', 'r_cut', 'r']
@@ -623,6 +632,9 @@ class Market:
         market_r = filterd_cc_df['weighted_r'].sum() / filterd_cc_df['traded_value'].sum()
 
         return {
-            'market_r': float(market_r),
+            'market_r': round(float(market_r), 1),
             'details': filterd_cc_df
         }
+    
+
+print(Market.market_covered_call_return()['market_r'])
