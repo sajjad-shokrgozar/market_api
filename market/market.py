@@ -200,7 +200,7 @@ class Market:
             'pcl', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'ztd'
         ]]
 
-        # total_df = temp_df.copy()
+        total_df = temp_df.copy()
 
         # Filter only option symbols
         temp_df = temp_df[temp_df['lvc'].str.contains('اختيار')]
@@ -234,10 +234,10 @@ class Market:
         temp_df['ttm'] = temp_df['g_maturity'].apply(Helpers.cal_ttm)
 
         # Map underlying's last/close price
-        # temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
-        # temp_df['ua_close_price'] = temp_df['underlying'].apply(lambda x: cls.get_close_price(x, total_df))
-        temp_df['ua_last_price'] = None
-        temp_df['ua_close_price'] = None
+        temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
+        temp_df['ua_close_price'] = temp_df['underlying'].apply(lambda x: cls.get_close_price(x, total_df))
+        # temp_df['ua_last_price'] = None
+        # temp_df['ua_close_price'] = None
 
         # temp_df = temp_df[~temp_df['ua_last_price'].isna()]
 
