@@ -256,7 +256,7 @@ class Market:
 
         temp_df['market'] = 'option'
 
-        temp_df[['IV', 'delta', 'gamma', 'vega']] = None, None, None
+        temp_df[['IV', 'delta', 'gamma', 'vega']] = None, None, None, None
 
         if Greeks:
 
