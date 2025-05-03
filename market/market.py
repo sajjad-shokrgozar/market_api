@@ -192,7 +192,7 @@ class Market:
     @classmethod
     def get_option_market_watch(cls, Greeks=False, risk_free_rate=0.3):
         """
-        Get option market data from TSE, compute implied volatility, delta, gamma, etc.
+        Get option market data from TSE, compute implied volatility, delta, gamma, vega, etc.
         Pass `risk_free_rate` to override default (0.3).
         """
         url = (
@@ -256,11 +256,11 @@ class Market:
 
         temp_df['market'] = 'option'
 
-        temp_df[['IV', 'delta', 'gamma']] = None, None, None
+        temp_df[['IV', 'delta', 'gamma', 'vega']] = None, None, None
 
         if Greeks:
 
-            # Calculate Implied Vol, Delta, Gamma
+            # Calculate Implied Vol, Delta, Gamma, Vega
             temp_df['IV'] = temp_df.apply(
                 lambda row: cls.implied_volatility(
                     row['ua_last_price'], row['strike'], row['pdv'],
@@ -297,12 +297,12 @@ class Market:
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
-            'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma'
+            'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma', 'vega'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
-            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma'
+            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma', 'vega'
         ]
         return temp_df
 
@@ -333,7 +333,7 @@ class Market:
         temp_df['lva'] = temp_df['lva'].apply(lambda x: Helpers.characters_modifier(x))
 
         # Create dummy columns to align with the option structure
-        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma']] = None
+        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma', 'vega']] = None
         temp_df['market'] = 'stock'
 
         temp_df = temp_df[[
