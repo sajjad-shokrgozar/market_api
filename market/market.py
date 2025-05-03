@@ -161,6 +161,17 @@ class Market:
         return n_prime_d1 / (s * sigma * np.sqrt(T))
 
     @staticmethod
+    def vega(s, k, ttm, r, sigma):
+        """Vega of a European option under Black–Scholes."""
+        T = ttm / 365.0
+        if T <= 0:
+            return 0.0
+
+        d1 = (np.log(s / k) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+        n_prime_d1 = np.exp(-0.5 * d1 ** 2) / np.sqrt(2 * np.pi)
+        return s * np.sqrt(T) * n_prime_d1
+
+    @staticmethod
     def get_last_price(x, total_df):
         """Look up last price of underlying in total_df by matching 'lva'."""
         x = x.strip()
@@ -268,6 +279,14 @@ class Market:
 
             temp_df['gamma'] = temp_df.apply(
                 lambda row: cls.gamma(
+                    row['ua_last_price'], row['strike'], row['ttm'],
+                    risk_free_rate, row['IV']
+                ),
+                axis=1
+            )
+
+            temp_df['vega'] = temp_df.apply(
+                lambda row: cls.vega(
                     row['ua_last_price'], row['strike'], row['ttm'],
                     risk_free_rate, row['IV']
                 ),
