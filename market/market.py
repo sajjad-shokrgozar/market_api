@@ -532,31 +532,36 @@ class Market:
             while threshold:
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').clear()
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[:-1]))
-                time.sleep(0.7)
+                time.sleep(.7)
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[-1]))
-                time.sleep(2)
+                time.sleep(1)
 
 
                 try:
                     result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div/div[1]/div[2]/div[3]/div[2]/div/div')
                     result_rows = result_box.find_elements(By.CLASS_NAME, 'ag-row')
-
+                    # return result_rows
                     if not len(result_rows):
                         break
 
                     for row in result_rows:
                         result_title = row.find_element(By.TAG_NAME, 'div')
-                        result_symbol = re.search(r'(.*)-(.*)', result_title.text.strip())[1]
+                        result_symbol = re.search(symbol, result_title.text.strip())[0]
 
                         if Helpers.characters_modifier(result_symbol.strip()) == Helpers.characters_modifier(symbol.strip()):
                             href = result_title.find_element(By.TAG_NAME, 'a').get_attribute('outerHTML')
                             tes_id = re.search(pattern, href)[1]
+                            with open('symbol_id_data.txt', 'a', encoding='utf8') as f:
+                                f.write(str(symbol) + ';' + str(tes_id) + '\n')
                             data.append([symbol, tes_id])
                             threshold = 0
                             break
                 except:
                     threshold -= 1
                     time.sleep(0.1)
+                    if threshold == 0:
+                        with open('symbol_id_error.txt', 'a', encoding='utf8') as f:
+                            f.write(str(symbol) + '\n')
                     continue
 
         return data
