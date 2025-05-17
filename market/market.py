@@ -295,12 +295,12 @@ class Market:
             
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ztd', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
             'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma', 'vega'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'size', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma', 'vega'
         ]
