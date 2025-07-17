@@ -190,10 +190,13 @@ class Market:
             return None
 
     @classmethod
-    def get_option_market_watch(cls, Greeks=False, risk_free_rate=0.3, iv_prime_ua_price_multiplier=0):
+    def get_option_market_watch(cls, price_type='last', Greeks=False, risk_free_rate=0.3, iv_prime_ua_price_multiplier=0):
         """
         Get option market data from TSE, compute implied volatility, delta, gamma, vega, etc.
         Pass `risk_free_rate` to override default (0.3).
+
+        Parameters
+        price_type: str = ['last', 'close', 'ask', 'bid', 'between_bid_ask']
         """
         url = (
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
@@ -266,24 +269,29 @@ class Market:
 
         temp_df['market'] = 'option'
 
+        if price_type == 'last':
+            p_type = 'pdv'
+        elif price_type == 'close':
+            p_type = 'pcl'
+        elif price_type == 'bid':
+            p_type = 'pmd1'
+        elif price_type == 'ask':
+            p_type = 'pmo1'
+        elif price_type == 'between_bid_ask':
+            p_type = 'between_bid_ask'
+
         temp_df[['IV', 'IV_prime', 'delta', 'gamma', 'vega']] = None, None, None, None, None
 
         if Greeks:
 
             # Calculate Implied Vol, Delta, Gamma, Vega
             temp_df['IV'] = temp_df.apply(
-                lambda row: cls.implied_volatility(
-                    row['ua_last_price'], row['strike'], (row['pmd1'] + row['pmo1']) / 2,
-                    row['ttm'], risk_free_rate, row['type']
-                ),
+                lambda row: cls.implied_volatility(row['ua_last_price'], row['strike'], (row['pmd1'] + row['pmo1']) / 2, row['ttm'], risk_free_rate, row['type']) if p_type != 'between_bid_ask' else cls.implied_volatility(row['ua_last_price'], row['strike'], row[f"{p_type}"], row['ttm'], risk_free_rate, row['type']),
                 axis=1
             )
             if iv_prime_ua_price_multiplier != 0:
                 temp_df['IV_prime'] = temp_df.apply(
-                    lambda row: cls.implied_volatility(
-                        row['ua_last_price'], row['strike'], row['pdv'] + row['ua_last_price'] * iv_prime_ua_price_multiplier,
-                        row['ttm'], risk_free_rate, row['type']
-                    ),
+                    lambda row: cls.implied_volatility(row['ua_last_price'], row['strike'], ((row['pmd1'] + row['pmo1']) / 2) + row['ua_last_price'] * iv_prime_ua_price_multiplier, row['ttm'], risk_free_rate, row['type']) if p_type != 'between_bid_ask' else cls.implied_volatility(row['ua_last_price'], row['strike'], row[f"{p_type}"] + row['ua_last_price'] * iv_prime_ua_price_multiplier, row['ttm'], risk_free_rate, row['type']),
                     axis=1
                 )
 
