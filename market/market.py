@@ -253,6 +253,9 @@ class Market:
 
         # temp_df = temp_df[~temp_df['ua_last_price'].isna()]
 
+        temp_df['strike'] = temp_df['strike'].astype(float)
+        temp_df['ua_last_price'] = temp_df['ua_last_price'].astype(float)
+    
         temp_df.loc[temp_df['strike'] == temp_df['ua_last_price'], 'status'] = 'atm'
         temp_df.loc[(temp_df['strike'] < temp_df['ua_last_price']) & (temp_df['type'] == 'call'), 'status'] = 'itm'
         temp_df.loc[(temp_df['strike'] > temp_df['ua_last_price']) & (temp_df['type'] == 'call'), 'status'] = 'otm'
