@@ -309,7 +309,7 @@ class Market:
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'ttm',
-            'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
+            'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega'
         ]
         return temp_df
@@ -352,7 +352,7 @@ class Market:
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'ttm',
-            'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
+            'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'size', 'max_limit', 'min_limit', 'ua_last', 'ua_close'
         ]
         return temp_df
