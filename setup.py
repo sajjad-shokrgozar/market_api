@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="market",
-    version="3.3.5",
+    version="3.3.6",
     author="sajjad_shokrgozar",
     author_email="shokrgozarsajjad@gmail.com",
     description="A Python package for market analysis and pricing",

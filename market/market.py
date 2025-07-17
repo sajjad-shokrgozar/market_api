@@ -219,6 +219,7 @@ class Market:
         temp_df.loc[temp_df['lvc'].str.contains('اختيارف'), 'type'] = 'put'
 
         temp_df['lva'] = temp_df['lva'].apply(lambda x: Helpers.characters_modifier(x))
+        temp_df = temp_df[~temp_df['lva'].str.startswith('ه')] # حذف اختیار تبعی ها
         temp_df[['underlying', 'strike', 'maturity']] = temp_df['lvc'].str.split('-', expand=True)
 
         # Clean up the 'underlying' field
