@@ -358,12 +358,12 @@ class Market:
         return temp_df
 
     @classmethod
-    def get_market_watch(cls, Greeks=False, risk_free_rate=0.3):
+    def get_market_watch(cls, Greeks=False, risk_free_rate=0.35, iv_prime_ua_price_multiplier=0):
         """
         Combine option and stock market data.
         Pass `risk_free_rate` to apply in option pricing calculations.
         """
-        tse_options = cls.get_option_market_watch(Greeks=Greeks, risk_free_rate=risk_free_rate)
+        tse_options = cls.get_option_market_watch(Greeks=Greeks, risk_free_rate=risk_free_rate, iv_prime_ua_price_multiplier=iv_prime_ua_price_multiplier)
         tse_stock = cls.get_stock_market_watch()
         return pd.concat([tse_options, tse_stock])
 
