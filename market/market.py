@@ -253,6 +253,12 @@ class Market:
 
         # temp_df = temp_df[~temp_df['ua_last_price'].isna()]
 
+        temp_df.loc[temp_df['strike'] == temp_df['ua_last_price'], 'status'] = 'atm'
+        temp_df.loc[(temp_df['strike'] < temp_df['ua_last_price']) & (temp_df['type'] == 'call'), 'status'] = 'itm'
+        temp_df.loc[(temp_df['strike'] > temp_df['ua_last_price']) & (temp_df['type'] == 'call'), 'status'] = 'otm'
+        temp_df.loc[(temp_df['strike'] < temp_df['ua_last_price']) & (temp_df['type'] == 'put'), 'status'] = 'otm'
+        temp_df.loc[(temp_df['strike'] > temp_df['ua_last_price']) & (temp_df['type'] == 'put'), 'status'] = 'itm'
+
         temp_df['strike'] = temp_df['strike'].astype(float)
 
         temp_df['market'] = 'option'
@@ -306,12 +312,12 @@ class Market:
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'ztd', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
-            'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega'
+            'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'ttm',
             'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
-            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega'
+            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]
         return temp_df
 
