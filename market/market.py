@@ -285,15 +285,33 @@ class Market:
         if Greeks:
 
             # Calculate Implied Vol, Delta, Gamma, Vega
+            # IV
             temp_df['IV'] = temp_df.apply(
-                lambda row: cls.implied_volatility(row['ua_last_price'], row['strike'], (row['pmd1'] + row['pmo1']) / 2, row['ttm'], risk_free_rate, row['type']) if p_type != 'between_bid_ask' else cls.implied_volatility(row['ua_last_price'], row['strike'], row[f"{p_type}"], row['ttm'], risk_free_rate, row['type']),
+                lambda row: cls.implied_volatility(
+                    row['ua_last_price'],
+                    row['strike'],
+                    (row['pmd1'] + row['pmo1']) / 2 if p_type == 'between_bid_ask' else row[f"{p_type}"],
+                    row['ttm'],
+                    risk_free_rate,
+                    row['type']
+                ),
                 axis=1
             )
+
+            # IV_prime
             if iv_prime_ua_price_multiplier != 0:
                 temp_df['IV_prime'] = temp_df.apply(
-                    lambda row: cls.implied_volatility(row['ua_last_price'], row['strike'], ((row['pmd1'] + row['pmo1']) / 2) + row['ua_last_price'] * iv_prime_ua_price_multiplier, row['ttm'], risk_free_rate, row['type']) if p_type != 'between_bid_ask' else cls.implied_volatility(row['ua_last_price'], row['strike'], row[f"{p_type}"] + row['ua_last_price'] * iv_prime_ua_price_multiplier, row['ttm'], risk_free_rate, row['type']),
+                    lambda row: cls.implied_volatility(
+                        row['ua_last_price'],
+                        row['strike'],
+                        ((row['pmd1'] + row['pmo1']) / 2 + row['ua_last_price'] * iv_prime_ua_price_multiplier) if p_type == 'between_bid_ask' else row[f"{p_type}"] + row['ua_last_price'] * iv_prime_ua_price_multiplier,
+                        row['ttm'],
+                        risk_free_rate,
+                        row['type']
+                    ),
                     axis=1
                 )
+
 
             temp_df['delta'] = temp_df.apply(
                 lambda row: cls.delta(
