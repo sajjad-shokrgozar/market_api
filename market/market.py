@@ -190,7 +190,7 @@ class Market:
             return None
 
     @classmethod
-    def get_option_market_watch(cls, Greeks=False, risk_free_rate=0.3):
+    def get_option_market_watch(cls, Greeks=False, risk_free_rate=0.3, iv_prime_ua_price_multiplier=0):
         """
         Get option market data from TSE, compute implied volatility, delta, gamma, vega, etc.
         Pass `risk_free_rate` to override default (0.3).
@@ -227,7 +227,7 @@ class Market:
 
         # Select final columns
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'type', 'underlying',
+            'insCode', 'insID', 'lva', 'lvc', 'type', 'underlying',
             'strike', 'maturity', 'pmd1', 'qmd1', 'pmo1', 'qmo1',
             'pdv', 'qtc', 'pMax', 'pMin', 'py', 'pcl', 'ztd'
         ]]
@@ -256,18 +256,26 @@ class Market:
 
         temp_df['market'] = 'option'
 
-        temp_df[['IV', 'delta', 'gamma', 'vega']] = None, None, None, None
+        temp_df[['IV', 'IV_prime', 'delta', 'gamma', 'vega']] = None, None, None, None, None
 
         if Greeks:
 
             # Calculate Implied Vol, Delta, Gamma, Vega
             temp_df['IV'] = temp_df.apply(
                 lambda row: cls.implied_volatility(
-                    row['ua_last_price'], row['strike'], row['pdv'],
+                    row['ua_last_price'], row['strike'], (row['pmd1'] + row['pmo1']) / 2,
                     row['ttm'], risk_free_rate, row['type']
                 ),
                 axis=1
             )
+            if iv_prime_ua_price_multiplier != 0:
+                temp_df['IV_prime'] = temp_df.apply(
+                    lambda row: cls.implied_volatility(
+                        row['ua_last_price'], row['strike'], row['pdv'] + row['ua_last_price'] * iv_prime_ua_price_multiplier,
+                        row['ttm'], risk_free_rate, row['type']
+                    ),
+                    axis=1
+                )
 
             temp_df['delta'] = temp_df.apply(
                 lambda row: cls.delta(
@@ -295,14 +303,14 @@ class Market:
             
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'ztd', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
-            'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma', 'vega'
+            'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
-            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'delta', 'gamma', 'vega'
+            'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega'
         ]
         return temp_df
 
@@ -317,6 +325,7 @@ class Market:
             '&paperTypes%5B2%5D=8&showTraded=false'
             '&withBestLimits=true&hEven=0&RefID=0'
         )
+
         res = requests.get(url, headers=cls.headers)
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
@@ -333,16 +342,16 @@ class Market:
         temp_df['lva'] = temp_df['lva'].apply(lambda x: Helpers.characters_modifier(x))
 
         # Create dummy columns to align with the option structure
-        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'delta', 'gamma', 'vega']] = None
+        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega']] = None
         temp_df['market'] = 'stock'
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'market', 'type', 'underlying', 'strike',
+            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike',
             'ttm', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
             'qmo1', 'ztd', 'pMax', 'pMin', 'ua_last_price', 'ua_close_price'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'ttm',
             'close', 'last', 'volume', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'size', 'max_limit', 'min_limit', 'ua_last', 'ua_close'
         ]
@@ -532,31 +541,36 @@ class Market:
             while threshold:
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').clear()
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[:-1]))
-                time.sleep(0.7)
+                time.sleep(.7)
                 driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/input').send_keys(str(symbol[-1]))
-                time.sleep(2)
+                time.sleep(1)
 
 
                 try:
                     result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div/div[1]/div[2]/div[3]/div[2]/div/div')
                     result_rows = result_box.find_elements(By.CLASS_NAME, 'ag-row')
-
+                    # return result_rows
                     if not len(result_rows):
                         break
 
                     for row in result_rows:
                         result_title = row.find_element(By.TAG_NAME, 'div')
-                        result_symbol = re.search(r'(.*)-(.*)', result_title.text.strip())[1]
+                        result_symbol = re.search(symbol, result_title.text.strip())[0]
 
                         if Helpers.characters_modifier(result_symbol.strip()) == Helpers.characters_modifier(symbol.strip()):
                             href = result_title.find_element(By.TAG_NAME, 'a').get_attribute('outerHTML')
                             tes_id = re.search(pattern, href)[1]
+                            with open('symbol_id_data.txt', 'a', encoding='utf8') as f:
+                                f.write(str(symbol) + ';' + str(tes_id) + '\n')
                             data.append([symbol, tes_id])
                             threshold = 0
                             break
                 except:
                     threshold -= 1
                     time.sleep(0.1)
+                    if threshold == 0:
+                        with open('symbol_id_error.txt', 'a', encoding='utf8') as f:
+                            f.write(str(symbol) + '\n')
                     continue
 
         return data
