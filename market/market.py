@@ -247,7 +247,7 @@ class Market:
         temp_df['g_maturity'] = temp_df['maturity'].apply(lambda x: Helpers.to_gregorian_date(x))
         # temp_df = temp_df[temp_df['g_maturity'] != 0]
         temp_df['ttm'] = temp_df['g_maturity'].apply(Helpers.cal_ttm)
-
+        temp_df['maturity'] = temp_df['maturity'].replace(r'/', '', regex=True)
         # Map underlying's last/close price
         temp_df['ua_last_price'] = temp_df['underlying'].apply(lambda x: cls.get_last_price(x, total_df))
         temp_df['ua_close_price'] = temp_df['underlying'].apply(lambda x: cls.get_close_price(x, total_df))
