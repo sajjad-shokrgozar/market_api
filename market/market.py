@@ -339,12 +339,12 @@ class Market:
             
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'ztd', 'ttm',
+            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'ztd', 'maturity', 'ttm',
             'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
             'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'ttm',
+            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'maturity', 'ttm',
             'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]
@@ -378,16 +378,16 @@ class Market:
         temp_df['lva'] = temp_df['lva'].apply(lambda x: Helpers.characters_modifier(x))
 
         # Create dummy columns to align with the option structure
-        temp_df[['type', 'underlying', 'strike', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega']] = None
+        temp_df[['type', 'underlying', 'strike', 'maturity', 'ttm', 'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega']] = None
         temp_df['market'] = 'stock'
 
         temp_df = temp_df[[
-            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike',
+            'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'maturity',
             'ttm', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
             'qmo1', 'ztd', 'pMax', 'pMin', 'ua_last_price', 'ua_close_price'
         ]]
         temp_df.columns = [
-            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'ttm',
+            'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'maturity', 'ttm',
             'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'size', 'max_limit', 'min_limit', 'ua_last', 'ua_close'
         ]
