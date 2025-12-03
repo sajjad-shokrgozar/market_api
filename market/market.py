@@ -23,7 +23,6 @@ from helpers import Helpers
 
 warnings.filterwarnings('ignore')
 
-
 class Market:
     """Market class that fetches TSE market data (stocks & options),
     calculates implied volatility, greeks, market cap, etc.
@@ -198,10 +197,35 @@ class Market:
         Parameters
         price_type: str = ['last', 'close', 'ask', 'bid', 'between_bid_ask']
         """
+        
+        HEADERS = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "en-US,en;q=0.9,fa;q=0.8",
+            "Referer": "https://tsetmc.com/",
+            "Origin": "https://tsetmc.com",
+            "Sec-Fetch-Site": "same-site",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Dest": "empty",
+        }
+
         url = (
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
-        res = requests.get(url, headers=cls.headers)
+
+        session = requests.Session()
+        session.headers.update(HEADERS)
+
+        while True:
+            try:
+                res = requests.get(url, timeout=5)
+                break
+            except Exception as e:
+                time.sleep(1)
+        
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
 
@@ -305,6 +329,7 @@ class Market:
                         row['ua_last_price'],
                         row['strike'],
                         ((row['pmd1'] + row['pmo1']) / 2 + row['ua_last_price'] * iv_prime_ua_price_multiplier) if p_type == 'between_bid_ask' else row[f"{p_type}"] + row['ua_last_price'] * iv_prime_ua_price_multiplier,
+                        # row['price_type']
                         row['ttm'],
                         risk_free_rate,
                         row['type']
@@ -340,12 +365,12 @@ class Market:
 
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'ztd', 'maturity', 'ttm',
-            'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
+            'py', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1', 'qmo1', 'pMax', 'pMin',
             'ua_last_price', 'ua_close_price', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'size', 'maturity', 'ttm',
-            'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
+            'yesterday', 'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'max_limit', 'min_limit', 'ua_last', 'ua_close', 'IV', 'IV_prime', 'delta', 'gamma', 'vega', 'status'
         ]
         return temp_df
@@ -383,12 +408,12 @@ class Market:
 
         temp_df = temp_df[[
             'insCode', 'insID', 'lva', 'lvc', 'market', 'type', 'underlying', 'strike', 'maturity',
-            'ttm', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
+            'ttm', 'py', 'pcl', 'pdv', 'qtc', 'pmd1', 'qmd1', 'pmo1',
             'qmo1', 'ztd', 'pMax', 'pMin', 'ua_last_price', 'ua_close_price'
         ]]
         temp_df.columns = [
             'id', 'code', 'symbol', 'name', 'market', 'type', 'underlying', 'strike', 'maturity', 'ttm',
-            'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
+            'yesterday', 'close', 'last', 'traded_value', 'bid_P', 'bid_Q', 'ask_P',
             'ask_Q', 'size', 'max_limit', 'min_limit', 'ua_last', 'ua_close'
         ]
         return temp_df
