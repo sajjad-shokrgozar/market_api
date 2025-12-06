@@ -217,7 +217,7 @@ class Market:
         )
 
         session = requests.Session()
-        session.headers.update(HEADERS)
+        session.headers.update(cls.HEADERS)
 
         while True:
             try:
