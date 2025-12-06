@@ -33,6 +33,20 @@ class Market:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0'
     }
 
+    HEADERS = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "en-US,en;q=0.9,fa;q=0.8",
+        "Referer": "https://tsetmc.com/",
+        "Origin": "https://tsetmc.com",
+        "Sec-Fetch-Site": "same-site",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+    }
+
     # Regex pattern for filtering out symbols with digits or ending with 'ح'
     bad_symbol_pattern = re.compile(r'[0-9]|ح$')
 
@@ -198,20 +212,6 @@ class Market:
         price_type: str = ['last', 'close', 'ask', 'bid', 'between_bid_ask']
         """
         
-        HEADERS = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
-            ),
-            "Accept": "application/json, text/javascript, */*; q=0.01",
-            "Accept-Language": "en-US,en;q=0.9,fa;q=0.8",
-            "Referer": "https://tsetmc.com/",
-            "Origin": "https://tsetmc.com",
-            "Sec-Fetch-Site": "same-site",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Dest": "empty",
-        }
-
         url = (
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
@@ -387,7 +387,17 @@ class Market:
             '&withBestLimits=true&hEven=0&RefID=0'
         )
 
-        res = requests.get(url, headers=cls.headers)
+        session = requests.Session()
+        session.headers.update(cls.HEADERS)
+
+        while True:
+            try:
+                res = requests.get(url, timeout=5)
+                break
+            except Exception as e:
+                time.sleep(1)
+
+        # res = requests.get(url, headers=cls.headers)
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
 
