@@ -216,15 +216,12 @@ class Market:
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
 
-        session = requests.Session()
-        session.headers.update(cls.HEADERS)
-
         while True:
             try:
-                res = requests.get(url, timeout=5)
+                res = requests.get(url, timeout=3)
                 break
             except Exception as e:
-                time.sleep(1)
+                time.sleep(.5)
         
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
@@ -387,15 +384,12 @@ class Market:
             '&withBestLimits=true&hEven=0&RefID=0'
         )
 
-        session = requests.Session()
-        session.headers.update(cls.HEADERS)
-
         while True:
             try:
-                res = requests.get(url, timeout=5)
+                res = requests.get(url, timeout=3)
                 break
             except Exception as e:
-                time.sleep(1)
+                time.sleep(.5)
 
         # res = requests.get(url, headers=cls.headers)
         market_watch = res.json()['marketwatch']
