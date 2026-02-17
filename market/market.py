@@ -29,10 +29,11 @@ class Market:
     """
 
     # Single class-level headers definition for all HTTP requests:
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0'
-    }
+    # headers = {
+    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0'
+    # }
 
+    
     HEADERS = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -216,12 +217,15 @@ class Market:
             'https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&industrialGroup=&paperTypes[0]=6&paperTypes[1]=2&paperTypes[2]=1&paperTypes[3]=8&showTraded=false&withBestLimits=true&hEven=0&RefID=0'
         )
 
+        # session = requests.Session()
+        # session.headers.update(cls.HEADERS)
+
         while True:
             try:
-                res = requests.get(url, timeout=3)
+                res = requests.get(url, headers=cls.HEADERS, timeout=5)
                 break
             except Exception as e:
-                time.sleep(.5)
+                time.sleep(1)
         
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
@@ -384,14 +388,17 @@ class Market:
             '&withBestLimits=true&hEven=0&RefID=0'
         )
 
+        session = requests.Session()
+        session.headers.update(cls.HEADERS)
+
         while True:
             try:
-                res = requests.get(url, timeout=3)
+                res = requests.get(url, headers=cls.HEADERS, timeout=5)
                 break
             except Exception as e:
-                time.sleep(.5)
+                time.sleep(1)
 
-        # res = requests.get(url, headers=cls.headers)
+        # res = requests.get(url, headers=cls.HEADERS)
         market_watch = res.json()['marketwatch']
         df = pd.DataFrame(market_watch)
 
@@ -562,7 +569,7 @@ class Market:
 
         for option_ticker in option_tickers:
             url = f'https://rahavard365.com/api/v2/search?keyword={option_ticker}'
-            res = requests.get(url, headers=cls.headers)
+            res = requests.get(url, headers=cls.HEADERS)
             res_json = res.json()['data']
             df = pd.concat([df, pd.DataFrame(res_json)])
 
