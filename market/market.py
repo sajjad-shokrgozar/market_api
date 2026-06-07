@@ -619,7 +619,7 @@ class Market:
 
 
                 try:
-                    result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div/div[1]/div[2]/div[3]/div[2]/div/div')
+                    result_box = driver.find_element(By.XPATH, '/html/body/div[2]/div[3]/div/div/div[2]/div/div/div[3]/div[1]/div[2]/div[3]/div[1]/div[2]/div')
                     result_rows = result_box.find_elements(By.CLASS_NAME, 'ag-row')
                     # return result_rows
                     if not len(result_rows):
